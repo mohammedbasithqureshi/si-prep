@@ -1,17 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SUBJECTS } from "../data/subjects";
 import WeightageBar from "./WeightageBar";
 import { useApp } from "../context/AppContext";
 import { getAdminTestsLocal } from "../lib/storage";
 import { generatePredictedSet } from "../lib/predictor";
-import { Flame, Layers, ArrowRight, BookOpen, ChevronRight, ShieldCheck, Wand2 } from "lucide-react";
+import { getReminderTime, setReminderTime, requestNotificationPermission, markAsked } from "../lib/notifications";
+import { Flame, Layers, ArrowRight, BookOpen, ChevronRight, ShieldCheck, Wand2, Bell } from "lucide-react";
 
 export default function Dashboard() {
   const nav = useNavigate();
   const { streak } = useApp();
   const adminTests = getAdminTestsLocal();
   const combinedTopicCount = SUBJECTS.reduce((s, sub) => s + sub.topics.length, 0);
+
+  const [reminderTime, setReminderTimeState] = useState(getReminderTime() || "");
+
+  async function handleSetReminder(time: string) {
+    const granted = await requestNotificationPermission();
+    markAsked();
+    if (!granted) {
+      alert("Notifications are blocked. Enable them in your browser's site settings to get daily reminders.");
+      return;
+    }
+    setReminderTime(time);
+    setReminderTimeState(time);
+  }
 
   function generateReasoningSet() {
     const reasoningTopics = SUBJECTS.find((s) => s.id === "reasoning")!.topics.map((t) => t.name);
@@ -29,16 +43,30 @@ export default function Dashboard() {
             Mock Test Center
           </h1>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-3">
-          <Flame className="text-yellow-500" size={22} />
-          <div>
-            <p className="text-lg font-bold leading-none text-slate-800">{streak.count}</p>
-            <p className="text-[11px] text-slate-500">day streak</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <Bell size={18} className="text-sky-500" />
+            <div>
+              <label className="block text-[11px] text-slate-400">Daily reminder</label>
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={(e) => handleSetReminder(e.target.value)}
+                className="text-sm font-semibold text-slate-800 focus:outline-none"
+              />
+            </div>
           </div>
-          <div className="ml-2 flex gap-1">
-            {streak.last7.map((v, i) => (
-              <span key={i} className={`h-6 w-1.5 rounded-full ${v ? "bg-yellow-400" : "bg-slate-200"}`} />
-            ))}
+          <div className="flex items-center gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-3">
+            <Flame className="text-yellow-500" size={22} />
+            <div>
+              <p className="text-lg font-bold leading-none text-slate-800">{streak.count}</p>
+              <p className="text-[11px] text-slate-500">day streak</p>
+            </div>
+            <div className="ml-2 flex gap-1">
+              {streak.last7.map((v, i) => (
+                <span key={i} className={`h-6 w-1.5 rounded-full ${v ? "bg-yellow-400" : "bg-slate-200"}`} />
+              ))}
+            </div>
           </div>
         </div>
       </div>

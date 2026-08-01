@@ -10,13 +10,13 @@ import {
 } from "../lib/storage";
 import { Question, TestResult } from "../types";
 import { Timer, Flag, ChevronLeft, ChevronRight, Menu, X, Star } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 const accentBg = {
   sky: "bg-sky-500",
   yellow: "bg-yellow-400",
   pink: "bg-pink-500",
 } as const;
-
 const accentSoft = {
   sky: "bg-sky-50 border-sky-200 text-sky-600",
   yellow: "bg-yellow-50 border-yellow-200 text-yellow-600",
@@ -31,6 +31,7 @@ type RunnerQuestion = Question & {
 export default function TestRunner() {
   const { testId } = useParams();
   const nav = useNavigate();
+  const { refreshStreak } = useApp();
 
   const isCombined = testId === "combined";
   const isAdmin = testId?.startsWith("admin:");
@@ -100,19 +101,16 @@ export default function TestRunner() {
     let wrong = 0;
     let skipped = 0;
     const perTopic: Record<string, { correct: number; total: number }> = {};
-
     questions.forEach((qq) => {
       const given = currentAnswers[qq.id];
       if (given === undefined) skipped++;
       else if (given === qq.answer) correct++;
       else wrong++;
-
       const topic = qq.topic || "General";
       if (!perTopic[topic]) perTopic[topic] = { correct: 0, total: 0 };
       perTopic[topic].total++;
       if (given === qq.answer) perTopic[topic].correct++;
     });
-
     return {
       correct,
       wrong,
@@ -127,13 +125,13 @@ export default function TestRunner() {
     if (timerRef.current) clearInterval(timerRef.current);
     const result = buildResult(answersRef.current);
     saveAttempt({ testId, date: new Date().toISOString(), ...result });
+    refreshStreak(); // was missing — streak never incremented without this
     nav("/results", { state: { result } });
   }
 
   // Timer
   useEffect(() => {
     if (totalSeconds <= 0 || questions.length === 0) return;
-
     setTimeLeft(totalSeconds);
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
@@ -145,7 +143,6 @@ export default function TestRunner() {
         return t - 1;
       });
     }, 1000);
-
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -213,7 +210,6 @@ export default function TestRunner() {
           <X size={18} className="inline sm:hidden" />
           <span className="hidden sm:inline">Exit Test</span>
         </button>
-
         <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5">
           <Timer
             size={16}
@@ -227,7 +223,6 @@ export default function TestRunner() {
             {fmt(timeLeft)}
           </span>
         </div>
-
         <button
           onClick={() => setPaletteOpen((p) => !p)}
           className="rounded-lg bg-slate-100 p-2 text-slate-600 lg:hidden"
@@ -312,7 +307,6 @@ export default function TestRunner() {
             >
               <Flag size={14} /> Mark for Review
             </button>
-
             <div className="flex gap-2">
               <button
                 disabled={safeIdx === 0}
@@ -321,7 +315,6 @@ export default function TestRunner() {
               >
                 <ChevronLeft size={16} /> Prev
               </button>
-
               {safeIdx === questions.length - 1 ? (
                 <button
                   onClick={finish}

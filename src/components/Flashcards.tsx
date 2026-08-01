@@ -4,8 +4,10 @@ import { Flashcard, CurrentAffairsItem } from "../types";
 import { getFlashcardState, addBookmark, removeBookmark } from "../lib/storage";
 import { fetchCurrentAffairs } from "../lib/api";
 import { Star, Newspaper, Brain, RefreshCw } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 export default function Flashcards() {
+  const { refreshStreak } = useApp();
   const [starState, setStarState] = useState(getFlashcardState());
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<"all" | "starred" | "current-affairs">("all");
@@ -31,6 +33,11 @@ export default function Flashcards() {
 
   useEffect(() => {
     loadCurrentAffairs();
+  }, []);
+
+  // Studying flashcards counts toward the streak
+  useEffect(() => {
+    refreshStreak();
   }, []);
 
   const allCards = [...FLASHCARDS_SEED, ...caCards];
