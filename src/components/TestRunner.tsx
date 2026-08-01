@@ -1,7 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SUBJECTS } from "../data/subjects";
-import { getAdminTestsLocal, saveAttempt } from "../lib/storage";
+import {
+  getAdminTestsLocal,
+  saveAttempt,
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+} from "../lib/storage";
 import { Question, TestResult } from "../types";
 import { Timer, Flag, ChevronLeft, ChevronRight, Menu, X, Star } from "lucide-react";
 
@@ -75,6 +81,16 @@ export default function TestRunner() {
     answersRef.current = answers;
   }, [answers]);
 
+  // Sync starred state from persistent bookmarks
+  useEffect(() => {
+    if (questions.length === 0) return;
+    const map: Record<string, boolean> = {};
+    questions.forEach((qq) => {
+      map[qq.id] = isBookmarked(qq.id);
+    });
+    setStarred(map);
+  }, [questions]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined
   );
@@ -141,6 +157,25 @@ export default function TestRunner() {
     const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
     const sec = String(s % 60).padStart(2, "0");
     return `${h}:${m}:${sec}`;
+  }
+
+  function toggleStar(q: RunnerQuestion) {
+    const currentlyStarred = starred[q.id];
+    if (currentlyStarred) {
+      removeBookmark(q.id);
+      setStarred((p) => ({ ...p, [q.id]: false }));
+    } else {
+      addBookmark({
+        id: q.id,
+        type: "question",
+        text: q.text,
+        subject: q.subject,
+        topic: q.topic,
+        options: q.options,
+        answer: q.answer,
+      });
+      setStarred((p) => ({ ...p, [q.id]: true }));
+    }
   }
 
   // Guard: no questions
@@ -222,9 +257,7 @@ export default function TestRunner() {
               {q.text}
             </p>
             <button
-              onClick={() =>
-                setStarred((p) => ({ ...p, [q.id]: !p[q.id] }))
-              }
+              onClick={() => toggleStar(q)}
               className={`rounded-full p-1.5 ${
                 starred[q.id] ? "text-yellow-500" : "text-slate-300"
               }`}

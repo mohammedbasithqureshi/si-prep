@@ -40,14 +40,38 @@ export function bumpStreak() {
   return updated;
 }
 
-export function getBookmarks(): string[] {
+export interface BookmarkItem {
+  id: string;
+  type: "question" | "flashcard";
+  text: string;
+  subject: string;
+  topic?: string;
+  options?: string[];
+  answer?: number;
+  back?: string; // for flashcards
+  savedAt: string;
+}
+
+export function getBookmarks(): BookmarkItem[] {
   return get(KEYS.bookmarks, []);
 }
-export function toggleBookmark(id: string) {
+
+export function addBookmark(item: Omit<BookmarkItem, "savedAt">) {
   const b = getBookmarks();
-  const next = b.includes(id) ? b.filter((x) => x !== id) : [...b, id];
+  if (b.find((x) => x.id === item.id)) return b; // already saved
+  const next = [{ ...item, savedAt: new Date().toISOString() }, ...b];
   set(KEYS.bookmarks, next);
   return next;
+}
+
+export function removeBookmark(id: string) {
+  const b = getBookmarks().filter((x) => x.id !== id);
+  set(KEYS.bookmarks, b);
+  return b;
+}
+
+export function isBookmarked(id: string): boolean {
+  return getBookmarks().some((x) => x.id === id);
 }
 
 export function getAttempts(): any[] {

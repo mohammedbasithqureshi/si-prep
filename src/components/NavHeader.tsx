@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Sparkles, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Sparkles, ShieldCheck, Star } from "lucide-react";
 
 const tabs = [
   { path: "/", label: "Mock Tests", icon: LayoutDashboard },
   { path: "/flashcards", label: "Flashcards", icon: Sparkles },
+  { path: "/bookmarks", label: "Bookmarks", icon: Star },
   { path: "/admin", label: "Admin", icon: ShieldCheck },
 ];
 

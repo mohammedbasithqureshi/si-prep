@@ -7,6 +7,7 @@ import Flashcards from "./components/Flashcards";
 import AdminPanel from "./components/AdminPanel";
 import TestRunner from "./components/TestRunner";
 import Results from "./components/Results";
+import Bookmarks from "./components/Bookmarks";
 
 export default function App() {
   const location = useLocation();
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/test/:testId" element={<TestRunner />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/bookmarks" element={<Bookmarks />} />
         </Routes>
       </div>
     </AppProvider>
