@@ -1,0 +1,38 @@
+import { Subject } from "../../types";
+
+export const generalStudies: Subject = {
+  id: "gs",
+  name: "General Studies",
+  short: "General Studies",
+  accent: "yellow",
+  duration: 30,
+  topics: [
+    { name: "Current Affairs (National & Int'l)", weight: 22 },
+    { name: "Telangana Movement & State Formation", weight: 20 },
+    { name: "Indian Polity & Economy", weight: 18 },
+    { name: "Geography of India", weight: 14 },
+    { name: "History of India", weight: 14 },
+    { name: "General Science", weight: 12 },
+  ],
+  questions: [
+    { id: "g1", text: "'Mission Bhagiratha' was launched in which state?", options: ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu"], answer: 1, topic: "Telangana Movement & State Formation", source: "Old Paper" },
+    { id: "g2", text: "Which Article of the Constitution abolishes untouchability?", options: ["Article 15", "Article 17", "Article 21", "Article 25"], answer: 1, topic: "Indian Polity & Economy", source: "Old Paper" },
+    { id: "g3", text: "The Telangana Rebellion (1946–51) was primarily directed against which system?", options: ["The British Government", "The Nizam and Jagirdari system", "The Madras Presidency", "The East India Company"], answer: 1, topic: "Telangana Movement & State Formation", source: "Predicted" },
+    { id: "g4", text: "Which river forms much of the border between Telangana and Maharashtra?", options: ["Krishna", "Godavari", "Tungabhadra", "Musi"], answer: 1, topic: "Geography of India", source: "Old Paper" },
+    { id: "g5", text: "Photosynthesis primarily takes place in which part of a plant cell?", options: ["Mitochondria", "Chloroplast", "Nucleus", "Ribosome"], answer: 1, topic: "General Science", source: "Old Paper" },
+    { id: "g7", text: "The Kaleshwaram Lift Irrigation Project is located on which river?", options: ["Krishna", "Godavari", "Musi", "Manjeera"], answer: 1, topic: "Geography of India", source: "Old Paper" },
+    { id: "g8", text: "Who was the first Chief Minister of Telangana?", options: ["N. Chandrababu Naidu", "K. Chandrashekar Rao", "N. Kiran Kumar Reddy", "Revanth Reddy"], answer: 1, topic: "Telangana Movement & State Formation", source: "Old Paper" },
+    { id: "g9", text: "Which Five Year Plan introduced the concept of 'inclusive growth' in India?", options: ["9th", "10th", "11th", "12th"], answer: 2, topic: "Indian Polity & Economy", source: "Old Paper" },
+    { id: "g10", text: "The Non-Cooperation Movement was launched in which year?", options: ["1919", "1920", "1922", "1930"], answer: 1, topic: "History of India", source: "Old Paper" },
+    { id: "g11", text: "The Mission Kakatiya scheme in Telangana is primarily related to which sector?", options: ["Education", "Irrigation tank restoration", "Healthcare", "Housing"], answer: 1, topic: "Telangana Movement & State Formation", source: "Old Paper" },
+    { id: "g12", text: "Who is regarded as the architect of the Indian Constitution?", options: ["Jawaharlal Nehru", "B.R. Ambedkar", "Sardar Patel", "Rajendra Prasad"], answer: 1, topic: "Indian Polity & Economy", source: "Old Paper" },
+    { id: "g13", text: "The Deccan Plateau primarily covers which part of India?", options: ["North India", "Northeast India", "Peninsular India", "Coastal India"], answer: 2, topic: "Geography of India", source: "Old Paper" },
+    { id: "g14", text: "The Quit India Movement was launched in which year?", options: ["1940", "1942", "1945", "1947"], answer: 1, topic: "History of India", source: "Old Paper" },
+    { id: "g15", text: "Which organ of the human body produces insulin?", options: ["Liver", "Kidney", "Pancreas", "Heart"], answer: 2, topic: "General Science", source: "Old Paper" },
+    { id: "g16", text: "The Reserve Bank of India was established in which year?", options: ["1935", "1947", "1950", "1955"], answer: 0, topic: "Indian Polity & Economy", source: "Old Paper" },
+    { id: "g17", text: "Warangal Fort was built by which dynasty?", options: ["Chalukyas", "Kakatiyas", "Qutb Shahis", "Nizams"], answer: 1, topic: "Telangana Movement & State Formation", source: "Old Paper" },
+    { id: "g18", text: "Which is the longest river entirely within Telangana's course before joining the Krishna basin?", options: ["Godavari", "Musi", "Manjeera", "Bhima"], answer: 2, topic: "Geography of India", source: "Predicted" },
+    { id: "g19", text: "The Battle of Plassey was fought in which year?", options: ["1757", "1764", "1772", "1799"], answer: 0, topic: "History of India", source: "Old Paper" },
+    { id: "g20", text: "Which gas is most responsible for the greenhouse effect?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], answer: 2, topic: "General Science", source: "Old Paper" },
+  ],
+};

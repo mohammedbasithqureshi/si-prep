@@ -1,34 +1,72 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FLASHCARDS_SEED } from "../data/flashcards";
 import { Flashcard, CurrentAffairsItem } from "../types";
 import { getFlashcardState, addBookmark, removeBookmark } from "../lib/storage";
 import { fetchCurrentAffairs } from "../lib/api";
-import { Star, Newspaper, Brain, RefreshCw } from "lucide-react";
+import { buildCurrentAffairsQuiz } from "../lib/caQuizGenerator";
+import { Star, Newspaper, Brain, RefreshCw, Zap } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export default function Flashcards() {
+  const nav = useNavigate();
   const { refreshStreak } = useApp();
   const [starState, setStarState] = useState(getFlashcardState());
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<"all" | "starred" | "current-affairs">("all");
   const [caCards, setCaCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadCurrentAffairs() {
     setLoading(true);
-    const items: CurrentAffairsItem[] = await fetchCurrentAffairs();
-    const cards: Flashcard[] = items.slice(0, 10).map((item, i) => ({
-      id: `ca-${i}-${item.link}`,
-      type: "current-affairs",
-      subject: item.source,
-      accent: "yellow",
-      front: item.title,
-      back: `Source: ${item.source} — open the link for the full release.`,
-      date: item.pubDate,
-      starred: false,
+    setError(null);
+    try {
+      const items: CurrentAffairsItem[] = await fetchCurrentAffairs();
+      const cards: Flashcard[] = items.slice(0, 10).map((item, i) => ({
+        id: `ca-${i}-${item.link}`,
+        type: "current-affairs",
+        subject: item.source,
+        accent: "yellow",
+        front: item.title,
+        back: `Source: ${item.source} — open the link for the full release.`,
+        date: item.pubDate,
+        starred: false,
+      }));
+      setCaCards(cards);
+      if (cards.length === 0) {
+        setError("No current affairs available right now — try refreshing later.");
+      }
+    } catch (e) {
+      setError(
+        "Couldn't load current affairs. Make sure the backend is running (vercel dev), not just vite dev."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function startCAQuiz() {
+    const caItems = caCards.map((c) => ({
+      title: c.front,
+      link: "",
+      pubDate: c.date || "",
+      source: c.subject,
     }));
-    setCaCards(cards);
-    setLoading(false);
+
+    if (caItems.length < 4) {
+      alert("Not enough current affairs loaded yet to build a quiz — try refreshing first.");
+      return;
+    }
+
+    const quiz = buildCurrentAffairsQuiz(caItems, 5).map((q) => ({
+      ...q,
+      subject: "Current Affairs",
+      accent: "yellow" as const,
+    }));
+
+    sessionStorage.setItem("generated-set", JSON.stringify(quiz));
+    nav("/test/generated?mode=practice");
   }
 
   useEffect(() => {
@@ -72,23 +110,35 @@ export default function Flashcards() {
           </h1>
           <p className="mt-1 text-sm text-slate-500">Important concepts + live current affairs</p>
         </div>
-        <button
-          onClick={loadCurrentAffairs}
-          disabled={loading}
-          className="flex items-center gap-1.5 rounded-xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          {loading ? "Fetching..." : "Refresh Current Affairs"}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={startCAQuiz}
+            className="flex items-center gap-1.5 rounded-xl bg-pink-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-pink-600"
+          >
+            <Zap size={14} /> Quiz Me on This
+          </button>
+
+          <button
+            onClick={loadCurrentAffairs}
+            disabled={loading}
+            className="flex items-center gap-1.5 rounded-xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-600 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            {loading ? "Fetching..." : "Refresh Current Affairs"}
+          </button>
+        </div>
       </div>
+
+      {error && <p className="mb-4 text-xs font-medium text-pink-600">{error}</p>}
 
       <div className="mb-6 flex gap-2">
         {(["all", "starred", "current-affairs"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${
-              filter === s ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition ${
+              filter === s ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
             }`}
           >
             {s.replace("-", " ")}
@@ -109,7 +159,7 @@ export default function Flashcards() {
               </span>
               <button
                 onClick={() => star(c)}
-                className={`rounded-full p-1 ${starState[c.id] ? "text-yellow-500" : "text-slate-300"}`}
+                className={`rounded-full p-1 transition ${starState[c.id] ? "text-yellow-500" : "text-slate-300 hover:text-slate-400"}`}
               >
                 <Star size={16} fill={starState[c.id] ? "currentColor" : "none"} />
               </button>
