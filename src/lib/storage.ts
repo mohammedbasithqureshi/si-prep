@@ -1,10 +1,15 @@
+import { NoteEntry } from "../data/notes";
+
 const KEYS = {
   streak: "siprep_streak",
   bookmarks: "siprep_bookmarks",
   attempts: "siprep_attempts",
   flashcards: "siprep_flashcards",
   adminTests: "siprep_admin_tests",
+  notes: "siprep_custom_notes",
 };
+
+// --- Storage Utilities ---
 
 function get<T>(key: string, fallback: T): T {
   try {
@@ -14,9 +19,31 @@ function get<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
+
 function set<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+
+// --- Custom Notes ---
+
+export function getCustomNotes(): NoteEntry[] {
+  return get(KEYS.notes, []);
+}
+
+export function addCustomNote(note: NoteEntry) {
+  const notes = getCustomNotes();
+  const next = [...notes, note];
+  set(KEYS.notes, next);
+  return next;
+}
+
+export function deleteCustomNote(id: string) {
+  const next = getCustomNotes().filter((n) => n.id !== id);
+  set(KEYS.notes, next);
+  return next;
+}
+
+// --- Streak ---
 
 export interface StreakData {
   count: number;
@@ -25,20 +52,28 @@ export interface StreakData {
 }
 
 export function getStreak(): StreakData {
-  return get(KEYS.streak, { count: 0, lastActive: null, last7: [false, false, false, false, false, false, false] });
+  return get(KEYS.streak, {
+    count: 0,
+    lastActive: null,
+    last7: [false, false, false, false, false, false, false],
+  });
 }
 
 export function bumpStreak() {
   const today = new Date().toISOString().slice(0, 10);
   const s = getStreak();
   if (s.lastActive === today) return s; // already counted today
+
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const newCount = s.lastActive === yesterday ? s.count + 1 : 1;
   const last7 = [...s.last7.slice(1), true];
   const updated = { count: newCount, lastActive: today, last7 };
+
   set(KEYS.streak, updated);
   return updated;
 }
+
+// --- Bookmarks ---
 
 export interface BookmarkItem {
   id: string;
@@ -74,17 +109,23 @@ export function isBookmarked(id: string): boolean {
   return getBookmarks().some((x) => x.id === id);
 }
 
+// --- Attempts ---
+
 export function getAttempts(): any[] {
   return get(KEYS.attempts, []);
 }
+
 export function saveAttempt(attempt: any) {
   const a = getAttempts();
   set(KEYS.attempts, [attempt, ...a].slice(0, 100));
 }
 
+// --- Flashcards ---
+
 export function getFlashcardState(): Record<string, boolean> {
   return get(KEYS.flashcards, {});
 }
+
 export function toggleFlashcardStar(id: string) {
   const s = getFlashcardState();
   s[id] = !s[id];
@@ -92,9 +133,12 @@ export function toggleFlashcardStar(id: string) {
   return s;
 }
 
+// --- Admin Tests ---
+
 export function getAdminTestsLocal(): any[] {
   return get(KEYS.adminTests, []);
 }
+
 export function saveAdminTestsLocal(tests: any[]) {
   set(KEYS.adminTests, tests);
 }

@@ -7,6 +7,8 @@ import { getAdminTestsLocal } from "../lib/storage";
 import { generatePredictedSet } from "../lib/predictor";
 import { getReminderTime, setReminderTime, requestNotificationPermission, markAsked } from "../lib/notifications";
 import { Flame, Layers, ArrowRight, BookOpen, ChevronRight, ShieldCheck, Wand2, Bell } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookOpenCheck } from "lucide-react";
 
 export default function Dashboard() {
   const nav = useNavigate();
@@ -96,10 +98,9 @@ export default function Dashboard() {
       <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Paper-wise Practice</h3>
       <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SUBJECTS.map((sub) => (
-          <button
+          <div
             key={sub.id}
-            onClick={() => nav(`/test/${sub.id}`)}
-            className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+            className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
           >
             <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
               <BookOpen size={12} /> {sub.duration} min
@@ -111,10 +112,19 @@ export default function Dashboard() {
             <div className="mt-4">
               <WeightageBar topics={sub.topics} accent={sub.accent} />
             </div>
-            <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-sky-600">
+            <button
+              onClick={() => nav(`/test/${sub.id}`)}
+              className="mt-4 flex items-center gap-1 text-sm font-semibold text-sky-600"
+            >
               Practice now <ChevronRight size={16} />
-            </div>
-          </button>
+            </button>
+            <Link
+              to={`/syllabus/${sub.id}`}
+              className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-600"
+            >
+              <BookOpenCheck size={12} /> Syllabus & Notes
+            </Link>
+          </div>
         ))}
 
         {/* Fresh generated reasoning set */}
