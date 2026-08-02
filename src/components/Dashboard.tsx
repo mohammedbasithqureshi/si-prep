@@ -306,17 +306,17 @@ export default function Dashboard() {
       {/* EXAM COUNTDOWN + QUICK DRILL                                 */}
       {/* ---------------------------------------------------------- */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <Calendar className="text-sky-500" size={24} />
-          <div>
-            <p className="text-lg font-bold text-slate-800">
-              {daysLeft > 0 ? `${daysLeft} days left` : "Exam date passed or not yet updated"}
-            </p>
-            <p className="text-[11px] text-slate-400">
-              Estimated — TSLPRB hasn't confirmed the prelims date yet. Placeholder: {EXAM_DATE.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-            </p>
-          </div>
-        </div>
+       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <Calendar className="text-sky-500" size={24} />
+  <div>
+    <p className="text-lg font-bold text-slate-800">
+      {daysLeft !== null ? `${daysLeft} days left` : "Exam date not yet announced"}
+    </p>
+    <p className="text-[11px] text-slate-400">
+      Applications open ~Aug 2026. Check tslprb.in for the confirmed prelims date.
+    </p>
+  </div>
+</div>
 
         {focusTopics.length > 0 && (
           <button onClick={startQuickDrill} className="flex items-center gap-3 rounded-2xl border border-pink-200 bg-pink-50/40 p-5 text-left shadow-sm hover:shadow-md">
