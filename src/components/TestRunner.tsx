@@ -9,7 +9,7 @@ import {
   isBookmarked,
 } from "../lib/storage";
 import { Question, TestResult } from "../types";
-import { Timer, Flag, ChevronLeft, ChevronRight, Menu, X, Star } from "lucide-react";
+import { Timer, Flag, ChevronLeft, ChevronRight, Menu, X, Star, CheckCircle2, XCircle } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 const accentBg = {
@@ -76,13 +76,11 @@ export default function TestRunner() {
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  // Keep latest answers for the timer callback (avoids stale closure)
   const answersRef = useRef(answers);
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
 
-  // Sync starred state from persistent bookmarks
   useEffect(() => {
     if (questions.length === 0) return;
     const map: Record<string, boolean> = {};
@@ -125,11 +123,10 @@ export default function TestRunner() {
     if (timerRef.current) clearInterval(timerRef.current);
     const result = buildResult(answersRef.current);
     saveAttempt({ testId, date: new Date().toISOString(), ...result });
-    refreshStreak(); // was missing — streak never incremented without this
+    refreshStreak();
     nav("/results", { state: { result } });
   }
 
-  // Timer
   useEffect(() => {
     if (totalSeconds <= 0 || questions.length === 0) return;
     setTimeLeft(totalSeconds);
@@ -175,7 +172,6 @@ export default function TestRunner() {
     }
   }
 
-  // Guard: no questions
   if (questions.length === 0) {
     return (
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4">
@@ -190,10 +186,15 @@ export default function TestRunner() {
     );
   }
 
-  // Keep idx in range if questions change
   const safeIdx = Math.min(idx, questions.length - 1);
   const q = questions[safeIdx];
   const accent = accentSoft[q.accent];
+  const answeredAlready = answers[q.id] !== undefined;
+
+  function selectOption(oi: number) {
+    if (answeredAlready) return; // lock in first answer once feedback is shown
+    setAnswers((p) => ({ ...p, [q.id]: oi }));
+  }
 
   function statusOf(i: number) {
     const qq = questions[i];
@@ -204,7 +205,6 @@ export default function TestRunner() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
-      {/* Header */}
       <div className="mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <button onClick={() => nav("/")} className="text-sm text-slate-500">
           <X size={18} className="inline sm:hidden" />
@@ -232,7 +232,6 @@ export default function TestRunner() {
       </div>
 
       <div className="flex flex-1 flex-col gap-4 lg:flex-row">
-        {/* Question panel */}
         <div className="flex-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <span
@@ -266,29 +265,48 @@ export default function TestRunner() {
 
           <div className="space-y-3">
             {q.options.map((opt: string, i: number) => {
-              const selected = answers[q.id] === i;
+              const isSelected = answers[q.id] === i;
+              const isCorrectOption = i === q.answer;
+
+              let style = "border-slate-200 text-slate-600 hover:border-slate-300";
+              let badge = "bg-slate-100 text-slate-400";
+
+              if (answeredAlready) {
+                if (isCorrectOption) {
+                  style = "border-emerald-300 bg-emerald-50 text-emerald-800";
+                  badge = "bg-emerald-500 text-white";
+                } else if (isSelected) {
+                  style = "border-rose-300 bg-rose-50 text-rose-800";
+                  badge = "bg-rose-500 text-white";
+                } else {
+                  style = "border-slate-200 text-slate-400 opacity-60";
+                }
+              } else if (isSelected) {
+                style = accent;
+                badge = `${accentBg[q.accent]} text-white`;
+              }
+
               return (
                 <button
                   key={i}
-                  onClick={() =>
-                    setAnswers((p) => ({ ...p, [q.id]: i }))
-                  }
-                  className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm ${
-                    selected
-                      ? accent
-                      : "border-slate-200 text-slate-600"
+                  onClick={() => selectOption(i)}
+                  disabled={answeredAlready}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${style} ${
+                    answeredAlready ? "cursor-default" : ""
                   }`}
                 >
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      selected
-                        ? `${accentBg[q.accent]} text-white`
-                        : "bg-slate-100 text-slate-400"
-                    }`}
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${badge}`}
                   >
                     {String.fromCharCode(65 + i)}
                   </span>
                   {opt}
+                  {answeredAlready && isCorrectOption && (
+                    <CheckCircle2 size={16} className="ml-auto text-emerald-500" />
+                  )}
+                  {answeredAlready && isSelected && !isCorrectOption && (
+                    <XCircle size={16} className="ml-auto text-rose-500" />
+                  )}
                 </button>
               );
             })}
@@ -336,7 +354,6 @@ export default function TestRunner() {
           </div>
         </div>
 
-        {/* Palette */}
         <div
           className={`${
             paletteOpen ? "block" : "hidden"
