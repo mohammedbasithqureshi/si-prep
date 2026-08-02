@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { SUBJECTS } from "../data/subjects";
 import {
   getAdminTestsLocal,
@@ -30,9 +30,11 @@ type RunnerQuestion = Question & {
 
 export default function TestRunner() {
   const { testId } = useParams();
+  const [searchParams] = useSearchParams();
   const nav = useNavigate();
   const { refreshStreak } = useApp();
 
+  const isPracticeMode = searchParams.get("mode") !== "exam";
   const isCombined = testId === "combined";
   const isAdmin = testId?.startsWith("admin:");
   const adminTest = isAdmin
@@ -189,10 +191,10 @@ export default function TestRunner() {
   const safeIdx = Math.min(idx, questions.length - 1);
   const q = questions[safeIdx];
   const accent = accentSoft[q.accent];
-  const answeredAlready = answers[q.id] !== undefined;
+  const answeredAlready = isPracticeMode && answers[q.id] !== undefined;
 
   function selectOption(oi: number) {
-    if (answeredAlready) return; // lock in first answer once feedback is shown
+    if (answeredAlready) return;
     setAnswers((p) => ({ ...p, [q.id]: oi }));
   }
 
@@ -210,18 +212,29 @@ export default function TestRunner() {
           <X size={18} className="inline sm:hidden" />
           <span className="hidden sm:inline">Exit Test</span>
         </button>
-        <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5">
-          <Timer
-            size={16}
-            className={timeLeft < 60 ? "text-pink-400" : "text-yellow-400"}
-          />
+        <div className="flex items-center gap-2">
           <span
-            className={`text-sm font-bold ${
-              timeLeft < 60 ? "text-pink-400" : "text-white"
+            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+              isPracticeMode
+                ? "bg-sky-100 text-sky-600"
+                : "bg-slate-800 text-slate-300"
             }`}
           >
-            {fmt(timeLeft)}
+            {isPracticeMode ? "Practice Mode" : "Exam Mode"}
           </span>
+          <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5">
+            <Timer
+              size={16}
+              className={timeLeft < 60 ? "text-pink-400" : "text-yellow-400"}
+            />
+            <span
+              className={`text-sm font-bold ${
+                timeLeft < 60 ? "text-pink-400" : "text-white"
+              }`}
+            >
+              {fmt(timeLeft)}
+            </span>
+          </div>
         </div>
         <button
           onClick={() => setPaletteOpen((p) => !p)}
