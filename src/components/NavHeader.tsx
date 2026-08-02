@@ -1,14 +1,14 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Sparkles, ShieldCheck, Star } from "lucide-react";
+import { LayoutDashboard, Sparkles, ShieldCheck, Star, TrendingUp } from "lucide-react";
 
 const tabs = [
   { path: "/", label: "Mock Tests", icon: LayoutDashboard },
   { path: "/flashcards", label: "Flashcards", icon: Sparkles },
   { path: "/bookmarks", label: "Bookmarks", icon: Star },
+  { path: "/progress", label: "Progress", icon: TrendingUp },
   { path: "/admin", label: "Admin", icon: ShieldCheck },
 ];
-
 export default function NavHeader() {
   const { pathname } = useLocation();
   return (

@@ -9,6 +9,7 @@ import TestRunner from "./components/TestRunner";
 import Results from "./components/Results";
 import Bookmarks from "./components/Bookmarks";
 import { startReminderWatcher } from "./lib/notifications";
+import ProgressPage from "./components/Progress";
 
 export default function App() {
   const location = useLocation();
@@ -23,12 +24,14 @@ export default function App() {
       <div className="min-h-screen bg-sky-50">
         {!hideNav && <NavHeader />}
         <Routes>
+          
           <Route path="/" element={<Dashboard />} />
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/test/:testId" element={<TestRunner />} />
           <Route path="/results" element={<Results />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
+          <Route path="/progress" element={<ProgressPage />} />
         </Routes>
       </div>
     </AppProvider>
