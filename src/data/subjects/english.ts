@@ -25,5 +25,11 @@ export const english: Subject = {
     { id: "e10", text: "Choose the antonym of 'Genuine'.", options: ["Authentic", "Real", "Fake", "True"], answer: 2, topic: "Vocabulary & Synonyms", source: "Old Paper" },
     { id: "e11", text: "Fill in the blank: 'By the time the police arrived, the thief ____ escaped.'", options: ["has", "had", "have", "having"], answer: 1, topic: "Grammar & Error Spotting", source: "Old Paper" },
     { id: "e12", text: "Choose the word that best completes: 'The officer was known for his ____ approach to duty.'", options: ["negligent", "diligent", "reluctant", "indifferent"], answer: 1, topic: "Vocabulary & Synonyms", source: "Predicted" },
-  ],
+  { id: "e13", text: "Read the passage: 'Discipline is the foundation of any successful career. Without it, talent alone rarely leads to lasting achievement.' What does the author suggest?", options: ["Talent is more important than discipline", "Discipline matters more than raw talent for lasting success", "Career success is guaranteed with talent", "Discipline is unnecessary if one is talented"], answer: 1, topic: "Reading Comprehension", source: "Old Paper" },
+{ id: "e14", text: "Based on the same passage, what is 'lasting achievement' contrasted with?", options: ["Quick, temporary success", "Financial success", "Talent", "Career choice"], answer: 0, topic: "Reading Comprehension", source: "Predicted" },
+{ id: "e15", text: "Choose the correctly punctuated sentence.", options: ["Its a hot day, isnt it", "It's a hot day, isn't it?", "Its a hot day isnt it?", "It's a hot day isn't it"], answer: 1, topic: "Grammar & Error Spotting", source: "Old Paper" },
+{ id: "e16", text: "Choose the synonym of 'Candid'.", options: ["Dishonest", "Frank", "Secretive", "Confused"], answer: 1, topic: "Vocabulary & Synonyms", source: "Old Paper" },
+{ id: "e17", text: "Choose the antonym of 'Ample'.", options: ["Sufficient", "Scarce", "Plentiful", "Generous"], answer: 1, topic: "Vocabulary & Synonyms", source: "Old Paper" },
+{ id: "e18", text: "Identify the error: 'He is one of the best player in the team.'", options: ["He is", "one of the best player", "in the team", "No error"], answer: 1, topic: "Grammar & Error Spotting", source: "Old Paper" },
+],
 };

@@ -15,5 +15,9 @@ export const reasoningNotes: NoteEntry[] = [
     id: "n7", subject: "Reasoning", topic: "Number Series & Simplification",
     title: "Common Series Patterns",
     body: "Recognize these patterns quickly:\n\n- Arithmetic: constant difference (2, 5, 8, 11...)\n- Geometric: constant ratio (3, 6, 12, 24...)\n- Squares/Cubes: 1, 4, 9, 16... or 1, 8, 27, 64...\n- Alternating operations: +2, ×2, +2, ×2...\n- Difference of differences (2nd order): 1, 2, 6, 15, 31 → differences are 1,4,9,16 (squares)\n\n- Always check the difference between consecutive terms first\n- If differences aren't constant, check if the differences themselves form a pattern",
-  },
+  },{
+  id: "n11", subject: "Reasoning", topic: "Analogies & Similarities",
+  title: "How to Solve Analogy Questions",
+  body: "Analogies test the relationship between a pair of words, then ask you to find the same relationship in a new pair.\n\nCommon relationship types:\n- Object → Function (Pen : Write)\n- Object → Location (Doctor : Hospital)\n- Category (Apple : Fruit)\n- Cause → Effect\n\n- First, state the relationship between the given pair in one sentence\n- Then test each option against that exact sentence\n- Watch for 'category' traps: e.g. Apple/Mango/Banana are fruits, but Potato is a vegetable — the odd one out",
+},
 ];

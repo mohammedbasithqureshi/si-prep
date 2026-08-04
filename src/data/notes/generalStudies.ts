@@ -15,5 +15,9 @@ export const generalStudiesNotes: NoteEntry[] = [
     id: "n8", subject: "General Studies", topic: "Geography of India",
     title: "Rivers of Telangana",
     body: "Godavari — enters Telangana from Maharashtra, flows through Nizamabad, Nirmal, forms part of the Maharashtra border\n\nKrishna — forms the southern boundary with Andhra Pradesh in parts, key for irrigation projects\n\nMusi — flows through Hyderabad, a tributary of the Krishna, historically important for the city's water supply (Osman Sagar, Himayat Sagar built on it)\n\nManjeera — a tributary of the Godavari, important for the Manjeera irrigation project\n\n- Remember: Godavari and Krishna are the two major rivers; Musi and Manjeera are their key tributaries relevant to Telangana specifically",
-  },
+  },{
+  id: "n12", subject: "General Studies", topic: "History of India",
+  title: "Key Freedom Movement Dates",
+  body: "1857 — First War of Independence (Sepoy Mutiny)\n1885 — Indian National Congress founded\n1919 — Jallianwala Bagh Massacre\n1920 — Non-Cooperation Movement launched\n1930 — Salt March (Dandi March) by Gandhi\n1942 — Quit India Movement\n1947 — Independence, 15 August\n\n- These dates are frequently tested directly — memorize the year and the one-line significance of each\n- Don't confuse Non-Cooperation (1920) with Civil Disobedience (1930) — different movements, different triggers",
+},
 ];
