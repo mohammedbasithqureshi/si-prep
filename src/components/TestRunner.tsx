@@ -7,16 +7,20 @@ import {
   addBookmark,
   removeBookmark,
   isBookmarked,
+  recordMistake,
+  clearMistake,
 } from "../lib/storage";
 import { Question, TestResult } from "../types";
 import { Timer, Flag, ChevronLeft, ChevronRight, Menu, X, Star, CheckCircle2, XCircle } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { randomizeQuestions } from "../lib/shuffle";
 
 const accentBg = {
   sky: "bg-sky-500",
   yellow: "bg-yellow-400",
   pink: "bg-pink-500",
 } as const;
+
 const accentSoft = {
   sky: "bg-sky-50 border-sky-200 text-sky-600",
   yellow: "bg-yellow-50 border-yellow-200 text-yellow-600",
@@ -42,24 +46,30 @@ export default function TestRunner() {
     : null;
 
   const questions: RunnerQuestion[] = useMemo(() => {
+    let base: RunnerQuestion[];
+
     if (isAdmin && adminTest) {
-      return adminTest.questions.map((q: Question) => ({
+      base = adminTest.questions.map((q: Question) => ({
         ...q,
         subject: adminTest.title,
         accent: "pink" as const,
       }));
+    } else if (!testId) {
+      base = [];
+    } else {
+      const active = isCombined ? SUBJECTS : SUBJECTS.filter((s) => s.id === testId);
+      base = active.flatMap((s) =>
+        s.questions.map((q) => ({
+          ...q,
+          subject: s.short,
+          accent: s.accent,
+        }))
+      );
     }
-    if (!testId) return [];
-    const active = isCombined
-      ? SUBJECTS
-      : SUBJECTS.filter((s) => s.id === testId);
-    return active.flatMap((s) =>
-      s.questions.map((q) => ({
-        ...q,
-        subject: s.short,
-        accent: s.accent,
-      }))
-    );
+
+    const isGenerated = testId === "generated";
+    return isGenerated ? base : randomizeQuestions(base);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId, isAdmin, isCombined, adminTest]);
 
   const totalSeconds = useMemo(() => {
@@ -92,25 +102,32 @@ export default function TestRunner() {
     setStarred(map);
   }, [questions]);
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(
-    undefined
-  );
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   function buildResult(currentAnswers: Record<string, number>): TestResult {
     let correct = 0;
     let wrong = 0;
     let skipped = 0;
     const perTopic: Record<string, { correct: number; total: number }> = {};
+
     questions.forEach((qq) => {
       const given = currentAnswers[qq.id];
-      if (given === undefined) skipped++;
-      else if (given === qq.answer) correct++;
-      else wrong++;
+      if (given === undefined) {
+        skipped++;
+      } else if (given === qq.answer) {
+        correct++;
+        clearMistake(qq.id);
+      } else {
+        wrong++;
+        recordMistake(qq);
+      }
+
       const topic = qq.topic || "General";
       if (!perTopic[topic]) perTopic[topic] = { correct: 0, total: 0 };
       perTopic[topic].total++;
       if (given === qq.answer) perTopic[topic].correct++;
     });
+
     return {
       correct,
       wrong,
@@ -178,10 +195,7 @@ export default function TestRunner() {
     return (
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4">
         <p className="text-slate-500">No questions found for this test.</p>
-        <button
-          onClick={() => nav("/")}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
-        >
+        <button onClick={() => nav("/")} className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">
           Go Home
         </button>
       </div>
@@ -212,30 +226,23 @@ export default function TestRunner() {
           <X size={18} className="inline sm:hidden" />
           <span className="hidden sm:inline">Exit Test</span>
         </button>
+
         <div className="flex items-center gap-2">
           <span
             className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-              isPracticeMode
-                ? "bg-sky-100 text-sky-600"
-                : "bg-slate-800 text-slate-300"
+              isPracticeMode ? "bg-sky-100 text-sky-600" : "bg-slate-800 text-slate-300"
             }`}
           >
             {isPracticeMode ? "Practice Mode" : "Exam Mode"}
           </span>
           <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5">
-            <Timer
-              size={16}
-              className={timeLeft < 60 ? "text-pink-400" : "text-yellow-400"}
-            />
-            <span
-              className={`text-sm font-bold ${
-                timeLeft < 60 ? "text-pink-400" : "text-white"
-              }`}
-            >
+            <Timer size={16} className={timeLeft < 60 ? "text-pink-400" : "text-yellow-400"} />
+            <span className={`text-sm font-bold ${timeLeft < 60 ? "text-pink-400" : "text-white"}`}>
               {fmt(timeLeft)}
             </span>
           </div>
         </div>
+
         <button
           onClick={() => setPaletteOpen((p) => !p)}
           className="rounded-lg bg-slate-100 p-2 text-slate-600 lg:hidden"
@@ -247,15 +254,11 @@ export default function TestRunner() {
       <div className="flex flex-1 flex-col gap-4 lg:flex-row">
         <div className="flex-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <span
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${accent}`}
-            >
+            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${accent}`}>
               {q.subject}
               {q.topic ? ` · ${q.topic}` : ""}
             </span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] text-slate-500">
-              {q.source}
-            </span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] text-slate-500">{q.source}</span>
           </div>
 
           <div className="mb-5 flex items-start justify-between gap-3">
@@ -265,14 +268,9 @@ export default function TestRunner() {
             </p>
             <button
               onClick={() => toggleStar(q)}
-              className={`rounded-full p-1.5 ${
-                starred[q.id] ? "text-yellow-500" : "text-slate-300"
-              }`}
+              className={`rounded-full p-1.5 ${starred[q.id] ? "text-yellow-500" : "text-slate-300"}`}
             >
-              <Star
-                size={18}
-                fill={starred[q.id] ? "currentColor" : "none"}
-              />
+              <Star size={18} fill={starred[q.id] ? "currentColor" : "none"} />
             </button>
           </div>
 
@@ -308,18 +306,12 @@ export default function TestRunner() {
                     answeredAlready ? "cursor-default" : ""
                   }`}
                 >
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${badge}`}
-                  >
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${badge}`}>
                     {String.fromCharCode(65 + i)}
                   </span>
                   {opt}
-                  {answeredAlready && isCorrectOption && (
-                    <CheckCircle2 size={16} className="ml-auto text-emerald-500" />
-                  )}
-                  {answeredAlready && isSelected && !isCorrectOption && (
-                    <XCircle size={16} className="ml-auto text-rose-500" />
-                  )}
+                  {answeredAlready && isCorrectOption && <CheckCircle2 size={16} className="ml-auto text-emerald-500" />}
+                  {answeredAlready && isSelected && !isCorrectOption && <XCircle size={16} className="ml-auto text-rose-500" />}
                 </button>
               );
             })}
@@ -327,17 +319,14 @@ export default function TestRunner() {
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
-              onClick={() =>
-                setMarked((p) => ({ ...p, [q.id]: !p[q.id] }))
-              }
+              onClick={() => setMarked((p) => ({ ...p, [q.id]: !p[q.id] }))}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold ${
-                marked[q.id]
-                  ? "bg-yellow-400 text-slate-900"
-                  : "bg-slate-100 text-slate-600"
+                marked[q.id] ? "bg-yellow-400 text-slate-900" : "bg-slate-100 text-slate-600"
               }`}
             >
               <Flag size={14} /> Mark for Review
             </button>
+
             <div className="flex gap-2">
               <button
                 disabled={safeIdx === 0}
@@ -346,18 +335,14 @@ export default function TestRunner() {
               >
                 <ChevronLeft size={16} /> Prev
               </button>
+
               {safeIdx === questions.length - 1 ? (
-                <button
-                  onClick={finish}
-                  className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-bold text-white"
-                >
+                <button onClick={finish} className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-bold text-white">
                   Submit Test
                 </button>
               ) : (
                 <button
-                  onClick={() =>
-                    setIdx((i) => Math.min(questions.length - 1, i + 1))
-                  }
+                  onClick={() => setIdx((i) => Math.min(questions.length - 1, i + 1))}
                   className={`flex items-center gap-1 rounded-lg ${accentBg[q.accent]} px-3 py-2 text-sm font-bold text-white`}
                 >
                   Next <ChevronRight size={16} />
@@ -372,9 +357,7 @@ export default function TestRunner() {
             paletteOpen ? "block" : "hidden"
           } w-full shrink-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:block lg:w-64`}
         >
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Question Palette
-          </p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Question Palette</p>
           <div className="grid grid-cols-8 gap-2 sm:grid-cols-10 lg:grid-cols-6">
             {questions.map((_: RunnerQuestion, i: number) => (
               <button
@@ -383,9 +366,9 @@ export default function TestRunner() {
                   setIdx(i);
                   setPaletteOpen(false);
                 }}
-                className={`flex h-8 w-8 items-center justify-center rounded-md text-xs font-bold ${statusOf(
-                  i
-                )} ${i === safeIdx ? "ring-2 ring-slate-800" : ""}`}
+                className={`flex h-8 w-8 items-center justify-center rounded-md text-xs font-bold ${statusOf(i)} ${
+                  i === safeIdx ? "ring-2 ring-slate-800" : ""
+                }`}
               >
                 {i + 1}
               </button>
