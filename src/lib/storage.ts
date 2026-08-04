@@ -15,13 +15,21 @@ function get<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
-  } catch {
+  } catch (e) {
+    console.error(`[storage] FAILED to read "${key}":`, e);
     return fallback;
   }
 }
 
-function set<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
+function set<T>(key: string, value: T): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    console.log(`[storage] Saved "${key}" —`, value);
+    return true;
+  } catch (e) {
+    console.error(`[storage] FAILED to save "${key}":`, e);
+    return false;
+  }
 }
 
 // --- Custom Notes ---
@@ -62,7 +70,7 @@ export function getStreak(): StreakData {
 export function bumpStreak() {
   const today = new Date().toISOString().slice(0, 10);
   const s = getStreak();
-  if (s.lastActive === today) return s; // already counted today
+  if (s.lastActive === today) return s;
 
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const newCount = s.lastActive === yesterday ? s.count + 1 : 1;
@@ -83,7 +91,7 @@ export interface BookmarkItem {
   topic?: string;
   options?: string[];
   answer?: number;
-  back?: string; // for flashcards
+  back?: string;
   savedAt: string;
 }
 
@@ -93,7 +101,7 @@ export function getBookmarks(): BookmarkItem[] {
 
 export function addBookmark(item: Omit<BookmarkItem, "savedAt">) {
   const b = getBookmarks();
-  if (b.find((x) => x.id === item.id)) return b; // already saved
+  if (b.find((x) => x.id === item.id)) return b;
   const next = [{ ...item, savedAt: new Date().toISOString() }, ...b];
   set(KEYS.bookmarks, next);
   return next;
@@ -139,6 +147,6 @@ export function getAdminTestsLocal(): any[] {
   return get(KEYS.adminTests, []);
 }
 
-export function saveAdminTestsLocal(tests: any[]) {
-  set(KEYS.adminTests, tests);
+export function saveAdminTestsLocal(tests: any[]): boolean {
+  return set(KEYS.adminTests, tests);
 }

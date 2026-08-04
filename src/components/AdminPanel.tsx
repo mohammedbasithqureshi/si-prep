@@ -9,20 +9,22 @@ import {
 import { AdminTest, Question } from "../types";
 import { NoteEntry } from "../data/notes";
 import { SUBJECTS } from "../data/subjects";
-import { ShieldCheck, Plus, Trash2, BookOpen } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, BookOpen, Upload } from "lucide-react";
+import { parseBulkText, ParseResult } from "../lib/bulkImport";
 
 function blankQuestion(): Question {
   return { id: "", text: "", options: ["", "", "", ""], answer: 0, topic: "", source: "Admin Created" };
 }
 
 export default function AdminPanel() {
-  // Mock Test State
   const [adminTests, setAdminTests] = useState<AdminTest[]>(getAdminTestsLocal());
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(20);
   const [questions, setQuestions] = useState<Question[]>([blankQuestion()]);
 
-  // Notes State
+  const [bulkText, setBulkText] = useState("");
+  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+
   const [customNotes, setCustomNotes] = useState<NoteEntry[]>(getCustomNotes());
   const [noteSubject, setNoteSubject] = useState(SUBJECTS[0]?.short || "");
   const [noteTopic, setNoteTopic] = useState("");
@@ -30,12 +32,6 @@ export default function AdminPanel() {
   const [noteBody, setNoteBody] = useState("");
 
   const topicsForSubject = SUBJECTS.find((s) => s.short === noteSubject)?.topics || [];
-
-  // Mock Test Helpers
-  function persist(tests: AdminTest[]) {
-    setAdminTests(tests);
-    saveAdminTestsLocal(tests);
-  }
 
   function updateQ(i: number, patch: Partial<Question>) {
     setQuestions((qs) => qs.map((q, idx) => (idx === i ? { ...q, ...patch } : q)));
@@ -55,26 +51,68 @@ export default function AdminPanel() {
     setQuestions((qs) => qs.filter((_, idx) => idx !== i));
   }
 
+  function handleParse() {
+    const result = parseBulkText(bulkText);
+    setParseResult(result);
+  }
+
+  function addParsedToCurrentTest() {
+    if (!parseResult || parseResult.questions.length === 0) return;
+    setQuestions((prev) => [...prev.filter((q) => q.text.trim()), ...parseResult.questions]);
+    setBulkText("");
+    setParseResult(null);
+  }
+
   function saveTest() {
-    if (!title.trim()) return;
+    console.log("[AdminPanel] Attempting to save test:", { title, duration, questions });
+
+    if (!title.trim()) {
+      alert("Please enter a test title before saving.");
+      return;
+    }
+
     const clean = questions
       .filter((q) => q.text.trim())
       .map((q, i) => ({ ...q, id: `admin-${Date.now()}-${i}` }));
-    if (clean.length === 0) return;
-    const next = [...adminTests, { id: `test-${Date.now()}`, title, duration: Number(duration), questions: clean }];
-    persist(next);
-    setTitle("");
-    setDuration(20);
-    setQuestions([blankQuestion()]);
+
+    if (clean.length === 0) {
+      alert("No valid questions to save — make sure at least one question has text filled in.");
+      return;
+    }
+
+    const next = [
+      ...adminTests,
+      { id: `test-${Date.now()}`, title, duration: Number(duration), questions: clean },
+    ];
+
+    const success = saveAdminTestsLocal(next);
+
+    if (success) {
+      setAdminTests(next);
+      setTitle("");
+      setDuration(20);
+      setQuestions([blankQuestion()]);
+      alert(
+        `Saved! "${title}" with ${clean.length} question(s). Go to the Tests tab to see it under "My Created Tests".`
+      );
+    } else {
+      alert("Save failed — check the browser console (F12) for the actual error.");
+    }
   }
 
   function deleteTest(i: number) {
-    persist(adminTests.filter((_, idx) => idx !== i));
+    const next = adminTests.filter((_, idx) => idx !== i);
+    const success = saveAdminTestsLocal(next);
+    if (success) setAdminTests(next);
+    else alert("Delete failed — check the browser console (F12) for the actual error.");
   }
 
-  // Notes Helpers
   function saveNote() {
-    if (!noteTitle.trim() || !noteBody.trim() || !noteTopic) return;
+    if (!noteTitle.trim() || !noteBody.trim() || !noteTopic) {
+      alert("Please fill in Subject, Topic, Title, and Body before saving.");
+      return;
+    }
+
     const note: NoteEntry = {
       id: `note-${Date.now()}`,
       subject: noteSubject,
@@ -82,10 +120,13 @@ export default function AdminPanel() {
       title: noteTitle,
       body: noteBody,
     };
-    setCustomNotes(addCustomNote(note));
+
+    const updated = addCustomNote(note);
+    setCustomNotes(updated);
     setNoteTitle("");
     setNoteBody("");
     setNoteTopic("");
+    alert(`Note "${note.title}" saved under ${note.subject} → ${note.topic}.`);
   }
 
   function removeNote(id: string) {
@@ -94,7 +135,6 @@ export default function AdminPanel() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* SECTION 1: Mock Test Builder */}
       <div className="mb-6 flex items-center gap-2">
         <ShieldCheck className="text-pink-500" size={22} />
         <div>
@@ -125,6 +165,59 @@ export default function AdminPanel() {
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none"
             />
           </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50/40 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Upload className="text-sky-500" size={18} />
+            <h3 className="text-sm font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+              Bulk Import Questions
+            </h3>
+          </div>
+          <p className="mb-3 text-xs text-slate-500">
+            Paste questions in this exact format, one blank line between each:
+          </p>
+          <pre className="mb-3 overflow-x-auto rounded-lg bg-slate-900 p-3 text-[11px] text-slate-300">
+{`Q: What is the capital of Telangana?
+A) Warangal
+B) Hyderabad
+C) Karimnagar
+D) Nizamabad
+Correct: B
+Topic: Geography of India`}
+          </pre>
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder="Paste your questions here..."
+            rows={8}
+            className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-sky-400 focus:outline-none"
+          />
+          <button onClick={handleParse} className="rounded-lg bg-sky-500 px-4 py-2 text-xs font-bold text-white">
+            Parse Questions
+          </button>
+
+          {parseResult && (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-semibold text-slate-700">
+                Parsed {parseResult.questions.length} question(s) successfully
+                {parseResult.errors.length > 0 && `, ${parseResult.errors.length} skipped`}
+              </p>
+              {parseResult.errors.map((err, i) => (
+                <p key={i} className="text-[11px] text-rose-500">
+                  {err}
+                </p>
+              ))}
+              {parseResult.questions.length > 0 && (
+                <button
+                  onClick={addParsedToCurrentTest}
+                  className="mt-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white"
+                >
+                  Add {parseResult.questions.length} Question(s) to This Test
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -215,7 +308,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* SECTION 2: Create Note */}
       <div className="mt-10">
         <div className="mb-4 flex items-center gap-2">
           <BookOpen className="text-sky-500" size={20} />
@@ -270,7 +362,7 @@ export default function AdminPanel() {
             value={noteBody}
             onChange={(e) => setNoteBody(e.target.value)}
             placeholder={
-              "Write the note content here.\n\nUse a blank line to start a new paragraph.\nStart a line with \"- \" for a bullet point."
+              'Write the note content here.\n\nUse a blank line to start a new paragraph.\nStart a line with "- " for a bullet point.'
             }
             rows={6}
             className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none"

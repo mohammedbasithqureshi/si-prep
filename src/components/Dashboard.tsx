@@ -30,6 +30,37 @@ import {
   Zap,
 } from "lucide-react";
 
+// Reusable wrapper so every section on the dashboard looks visually
+// distinct — its own card, its own heading, its own icon. Add new
+// dashboard sections by wrapping them in this, not by adding more
+// loose <div>s directly under the page.
+function SectionCard({
+  title,
+  subtitle,
+  icon,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-8 rounded-3xl border border-slate-200 bg-white/70 p-5 shadow-sm sm:p-6">
+      <div className="mb-4 flex items-center gap-2">
+        {icon}
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700" style={{ fontFamily: "Sora" }}>
+            {title}
+          </h2>
+          {subtitle && <p className="text-[11px] text-slate-400">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export default function Dashboard() {
   const nav = useNavigate();
   const { streak } = useApp();
@@ -38,10 +69,6 @@ export default function Dashboard() {
 
   // ------------------------------------------------------------------
   // PRACTICE VS EXAM MODE
-  // Controls whether TestRunner shows instant right/wrong feedback
-  // (practice) or stays blind until the end (exam). Persisted so it
-  // sticks between visits. See src/components/TestRunner.tsx for the
-  // consuming logic (isPracticeMode / answeredAlready).
   // ------------------------------------------------------------------
   const [mode, setMode] = useState<"practice" | "exam">(
     (localStorage.getItem("siprep_test_mode") as "practice" | "exam") || "exam"
@@ -52,16 +79,12 @@ export default function Dashboard() {
     localStorage.setItem("siprep_test_mode", m);
   }
 
-  // Single navigation helper — every "start a test" button should route
-  // through this so the mode query param always gets attached.
   function startTest(path: string) {
     nav(`${path}?mode=${mode}`);
   }
 
   // ------------------------------------------------------------------
   // DAILY REMINDER
-  // See src/lib/notifications.ts for the underlying watcher, started
-  // once in App.tsx via startReminderWatcher().
   // ------------------------------------------------------------------
   const [reminderTime, setReminderTimeState] = useState(getReminderTime() || "");
 
@@ -77,11 +100,7 @@ export default function Dashboard() {
   }
 
   // ------------------------------------------------------------------
-  // RULE-BASED PREDICTED QUESTION GENERATOR
-  // Only covers Reasoning topics with a real formula (see
-  // src/lib/predictor.ts — GENERATORS map). GS/English/Telugu can't be
-  // generated this way; those need curated content via Admin → Add Note
-  // / Admin → Create Mock Test instead.
+  // RULE-BASED PREDICTED QUESTION GENERATOR (Reasoning only)
   // ------------------------------------------------------------------
   function generateReasoningSet() {
     const reasoningTopics = SUBJECTS.find((s) => s.id === "reasoning")!.topics.map((t) => t.name);
@@ -91,9 +110,7 @@ export default function Dashboard() {
   }
 
   // ------------------------------------------------------------------
-  // FOCUS AREAS & QUICK DRILL
-  // Combines syllabus weightage with your actual attempt history to
-  // surface what's most worth studying right now.
+  // FOCUS AREAS, COUNTDOWN & QUICK DRILL
   // ------------------------------------------------------------------
   const focusTopics = useMemo(() => getFocusTopics(4), []);
   const daysLeft = useMemo(() => getDaysUntilExam(), []);
@@ -107,14 +124,12 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* ---------------------------------------------------------- */}
-      {/* HEADER: title + reminder + streak + mode toggle             */}
-      {/* ---------------------------------------------------------- */}
+      {/* ============ TOP BAR: title + reminder + streak ============ */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="text-sm text-slate-400">TS Police SI Recruitment 2026</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-800 sm:text-3xl" style={{ fontFamily: "Sora" }}>
-            Mock Test Center
+            SI Prep
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -145,7 +160,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Practice / Exam mode toggle — sits under the header row */}
+      {/* Practice / Exam mode toggle */}
       <div className="mb-8 flex items-center gap-3">
         <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1">
           <button
@@ -166,19 +181,16 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* ---------------------------------------------------------- */}
-      {/* FOCUS AREAS — data-driven "study this next" widget          */}
-      {/* ---------------------------------------------------------- */}
-      {focusTopics.length > 0 && (
-        <div className="mb-8 rounded-2xl border border-pink-200 bg-pink-50/40 p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <AlertCircle size={18} className="text-pink-500" />
-            <h3 className="text-sm font-bold text-slate-800" style={{ fontFamily: "Sora" }}>Focus Areas</h3>
-            <span className="text-[11px] text-slate-400">— highest weightage, lowest accuracy</span>
-          </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* ============ SECTION: YOUR INSIGHTS ============ */}
+      <SectionCard
+        title="Your Insights"
+        subtitle="Focus areas, exam countdown, and a quick drill"
+        icon={<AlertCircle size={18} className="text-pink-500" />}
+      >
+        {focusTopics.length > 0 && (
+          <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {focusTopics.map((f) => (
-              <div key={f.topic} className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5">
+              <div key={f.topic} className="flex items-center justify-between rounded-xl bg-pink-50/60 px-3 py-2.5">
                 <div>
                   <p className="text-xs font-semibold text-slate-800">{f.topic}</p>
                   <p className="text-[10px] text-slate-400">
@@ -192,104 +204,142 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ---------------------------------------------------------- */}
-      {/* COMBINED FULL-LENGTH TEST HERO                               */}
-      {/* ---------------------------------------------------------- */}
-      <button
-        onClick={() => startTest("/test/combined")}
-        className="group mb-8 block w-full rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-6 text-left transition hover:border-sky-300 sm:p-8"
-      >
-        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-600">
-              <Layers size={14} /> Full Length Test
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <Calendar className="text-sky-500" size={22} />
+            <div>
+              <p className="text-sm font-bold text-slate-800">
+                {daysLeft !== null ? `${daysLeft} days left` : "Exam date not yet announced"}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Applications open ~Aug 2026. Check tslprb.in for the confirmed prelims date.
+              </p>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 sm:text-2xl" style={{ fontFamily: "Sora" }}>
-              Combined Prelims Simulation
-            </h2>
-            <p className="mt-1 max-w-xl text-sm text-slate-500">
-              All 4 papers, {combinedTopicCount} topics, real exam timing.
-            </p>
           </div>
-          <div className="flex items-center gap-2 self-start rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white group-hover:bg-sky-600 sm:self-center">
-            Start Test <ArrowRight size={18} />
-          </div>
-        </div>
-      </button>
 
-      {/* ---------------------------------------------------------- */}
-      {/* PAPER-WISE PRACTICE CARDS + GENERATED SET TILE               */}
-      {/* ---------------------------------------------------------- */}
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Paper-wise Practice</h3>
-      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {SUBJECTS.map((sub) => (
-          <div
-            key={sub.id}
-            className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+          {focusTopics.length > 0 && (
+            <button
+              onClick={startQuickDrill}
+              className="flex items-center gap-3 rounded-xl border border-pink-200 bg-pink-50/40 p-4 text-left hover:shadow-sm"
+            >
+              <Zap className="text-pink-500" size={22} />
+              <div>
+                <p className="text-sm font-bold text-slate-800">5-Question Quick Drill</p>
+                <p className="text-[11px] text-slate-500">Targets: {focusTopics[0].topic}</p>
+              </div>
+            </button>
+          )}
+        </div>
+      </SectionCard>
+
+      {/* ============ SECTION: MOCK TESTS ============ */}
+      <SectionCard
+        title="Mock Tests"
+        subtitle="Combined simulation, paper-wise practice, and generated sets"
+        icon={<Layers size={18} className="text-sky-500" />}
+      >
+        <button
+          onClick={() => startTest("/test/combined")}
+          className="group mb-6 block w-full rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-6 text-left transition hover:border-sky-300"
+        >
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+                Combined Prelims Simulation
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                All 4 papers, {combinedTopicCount} topics, real exam timing.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 self-start rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white group-hover:bg-sky-600 sm:self-center">
+              Start Test <ArrowRight size={18} />
+            </div>
+          </div>
+        </button>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SUBJECTS.map((sub) => (
+            <div
+              key={sub.id}
+              className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+            >
+              <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                <BookOpen size={12} /> {sub.duration} min
+              </div>
+              <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+                {sub.short}
+              </h4>
+              <p className="mt-1 text-xs text-slate-400">{sub.questions.length} Qs</p>
+              <div className="mt-4">
+                <WeightageBar topics={sub.topics} accent={sub.accent} />
+              </div>
+              <button
+                onClick={() => startTest(`/test/${sub.id}`)}
+                className="mt-4 flex items-center gap-1 text-sm font-semibold text-sky-600"
+              >
+                Practice now <ChevronRight size={16} />
+              </button>
+            </div>
+          ))}
+
+          <button
+            onClick={generateReasoningSet}
+            className="flex flex-col rounded-2xl border border-sky-200 bg-sky-50/40 p-5 text-left shadow-sm transition hover:shadow-md"
           >
-            <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-              <BookOpen size={12} /> {sub.duration} min
+            <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-600">
+              <Wand2 size={12} /> Fresh Set
             </div>
             <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
-              {sub.short}
+              Generate New Reasoning Qs
             </h4>
-            <p className="mt-1 text-xs text-slate-400">{sub.questions.length} Qs</p>
-            <div className="mt-4">
-              <WeightageBar topics={sub.topics} accent={sub.accent} />
-            </div>
-            <button
-              onClick={() => startTest(`/test/${sub.id}`)}
-              className="mt-4 flex items-center gap-1 text-sm font-semibold text-sky-600"
-            >
-              Practice now <ChevronRight size={16} />
-            </button>
+            <p className="mt-1 text-xs text-slate-400">
+              Freshly generated, never repeated — Number Series, SI, Time & Work, Averages, Clocks
+            </p>
+          </button>
+        </div>
+      </SectionCard>
+
+      {/* ============ SECTION: NOTES & SYLLABUS ============ */}
+      <SectionCard
+        title="Notes & Syllabus"
+        subtitle="Full topic breakdown and study notes, per subject"
+        icon={<BookOpenCheck size={18} className="text-emerald-500" />}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SUBJECTS.map((sub) => (
             <Link
+              key={sub.id}
               to={`/syllabus/${sub.id}`}
-              className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-600"
+              className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
             >
-              <BookOpenCheck size={12} /> Syllabus & Notes
+              <BookOpenCheck size={18} className="mb-2 text-emerald-500" />
+              <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+                {sub.short}
+              </h4>
+              <p className="mt-1 text-xs text-slate-400">{sub.topics.length} topics</p>
+              <span className="mt-3 text-sm font-semibold text-emerald-600">View Syllabus & Notes →</span>
             </Link>
-          </div>
-        ))}
+          ))}
+        </div>
+      </SectionCard>
 
-        {/* Rule-based generated Reasoning set */}
-        <button
-          onClick={generateReasoningSet}
-          className="flex flex-col rounded-2xl border border-sky-200 bg-sky-50/40 p-5 text-left shadow-sm transition hover:shadow-md"
-        >
-          <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-600">
-            <Wand2 size={12} /> Fresh Set
-          </div>
-          <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
-            Generate New Reasoning Qs
-          </h4>
-          <p className="mt-1 text-xs text-slate-400">
-            Freshly generated, never repeated — Number Series, SI, Time & Work, Averages, Clocks
-          </p>
-        </button>
-      </div>
-
-      {/* ---------------------------------------------------------- */}
-      {/* ADMIN-CREATED TESTS — only rendered if any exist             */}
-      {/* ---------------------------------------------------------- */}
+      {/* ============ SECTION: ADMIN-CREATED TESTS ============ */}
       {adminTests.length > 0 && (
-        <>
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
-            <ShieldCheck size={14} className="text-pink-500" /> My Created Tests
-          </h3>
-          <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SectionCard
+          title="My Created Tests"
+          subtitle="Built by you in the Admin panel — not from the internet"
+          icon={<ShieldCheck size={18} className="text-pink-500" />}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {adminTests.map((t, i) => (
               <button
                 key={i}
                 onClick={() => startTest(`/test/admin:${i}`)}
                 className="flex flex-col rounded-2xl border border-pink-200 bg-pink-50/40 p-5 text-left shadow-sm hover:shadow-md"
               >
-                <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-pink-100 px-2.5 py-1 text-[11px] font-semibold text-pink-600">
-                  <ShieldCheck size={12} /> Admin Created
-                </div>
+                <ShieldCheck size={16} className="mb-2 text-pink-500" />
                 <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
                   {t.title}
                 </h4>
@@ -299,35 +349,8 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
-        </>
+        </SectionCard>
       )}
-
-      {/* ---------------------------------------------------------- */}
-      {/* EXAM COUNTDOWN + QUICK DRILL                                 */}
-      {/* ---------------------------------------------------------- */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-  <Calendar className="text-sky-500" size={24} />
-  <div>
-    <p className="text-lg font-bold text-slate-800">
-      {daysLeft !== null ? `${daysLeft} days left` : "Exam date not yet announced"}
-    </p>
-    <p className="text-[11px] text-slate-400">
-      Applications open ~Aug 2026. Check tslprb.in for the confirmed prelims date.
-    </p>
-  </div>
-</div>
-
-        {focusTopics.length > 0 && (
-          <button onClick={startQuickDrill} className="flex items-center gap-3 rounded-2xl border border-pink-200 bg-pink-50/40 p-5 text-left shadow-sm hover:shadow-md">
-            <Zap className="text-pink-500" size={24} />
-            <div>
-              <p className="text-sm font-bold text-slate-800">5-Question Quick Drill</p>
-              <p className="text-[11px] text-slate-500">Targets your weakest topic: {focusTopics[0].topic}</p>
-            </div>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
