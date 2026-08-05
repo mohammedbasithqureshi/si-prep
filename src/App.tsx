@@ -12,6 +12,11 @@ import { startReminderWatcher } from "./lib/notifications";
 import ProgressPage from "./components/Progress";
 import Syllabus from "./components/Syllabus";
 import Notes from "./components/Notes"
+import Footer from "./components/Footer";
+import PrivacyPolicy from "./components/legal/PrivacyPolicy";
+import TermsOfService from "./components/legal/TermsOfService";
+import Disclaimer from "./components/legal/Disclaimer";
+import Contact from "./components/legal/Contact";
 
 export default function App() {
   const location = useLocation();
@@ -36,8 +41,13 @@ export default function App() {
       <Route path="/results" element={<Results />} />
       <Route path="/syllabus/:subjectId" element={<Syllabus />} />
       <Route path="/notes/:subjectId" element={<Notes />} /> 
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+<Route path="/terms-of-service" element={<TermsOfService />} />
+<Route path="/disclaimer" element={<Disclaimer />} />
+<Route path="/contact" element={<Contact />} />
     </Routes>
   </div>
+  {!hideNav && <Footer />}
 </div>
     </AppProvider>
   );

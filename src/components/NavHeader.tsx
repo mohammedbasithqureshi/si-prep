@@ -10,6 +10,18 @@ const tabs = [
   { path: "/admin", label: "Admin", icon: ShieldCheck },
 ];
 
+function Logo({ size = 32 }: { size?: number }) {
+  return (
+    <img
+      src="/favicon.svg"
+      alt="SI Prep logo"
+      width={size}
+      height={size}
+      className="rounded-lg"
+    />
+  );
+}
+
 export default function NavHeader() {
   const { pathname } = useLocation();
 
@@ -18,10 +30,10 @@ export default function NavHeader() {
       {/* Desktop top bar */}
       <div className="sticky top-0 z-20 hidden border-b border-sky-100 bg-white/90 backdrop-blur sm:block">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 font-bold text-white">SI</div>
+          <Link to="/" className="flex items-center gap-2">
+            <Logo size={32} />
             <span className="font-bold text-slate-800">SI Prep</span>
-          </div>
+          </Link>
           <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
             {tabs.map((t) => {
               const Icon = t.icon;
@@ -42,10 +54,10 @@ export default function NavHeader() {
 
       {/* Mobile top brand bar */}
       <div className="sticky top-0 z-20 flex items-center justify-center border-b border-sky-100 bg-white/90 px-4 py-2.5 backdrop-blur sm:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500 text-xs font-bold text-white">SI</div>
+        <Link to="/" className="flex items-center gap-2">
+          <Logo size={28} />
           <span className="text-sm font-bold text-slate-800">SI Prep</span>
-        </div>
+        </Link>
       </div>
 
       {/* Mobile bottom tab bar */}
