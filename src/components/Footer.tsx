@@ -8,7 +8,11 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500 text-xs font-bold text-white">SI</div>
+            <img
+              src="/web-app-manifest-512x512.png"
+              alt="SI Prep"
+              className="h-7 w-7 rounded-lg"
+            />
             <span className="text-sm font-bold text-slate-700">SI Prep</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
