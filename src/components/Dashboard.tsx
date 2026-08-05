@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { SUBJECTS } from "../data/subjects";
 import WeightageBar from "./WeightageBar";
 import { useApp } from "../context/AppContext";
-import { getAdminTestsLocal } from "../lib/storage";
+import { getAdminTestsLocal, getMistakes } from "../lib/storage";
 import { generatePredictedSet } from "../lib/predictor";
 import { getFocusTopics, getWeakestTopicQuestions } from "../lib/analysis";
 import { getDaysUntilExam, EXAM_DATE } from "../lib/examDate";
@@ -28,6 +28,7 @@ import {
   AlertCircle,
   Calendar,
   Zap,
+  RotateCcw,
 } from "lucide-react";
 
 // Reusable wrapper so every section on the dashboard looks visually
@@ -114,11 +115,21 @@ export default function Dashboard() {
   // ------------------------------------------------------------------
   const focusTopics = useMemo(() => getFocusTopics(4), []);
   const daysLeft = useMemo(() => getDaysUntilExam(), []);
+  const mistakes = useMemo(() => getMistakes(), []);
 
   function startQuickDrill() {
     const drill = getWeakestTopicQuestions(5);
     if (!drill) return;
     sessionStorage.setItem("generated-set", JSON.stringify(drill.questions));
+    startTest("/test/generated");
+  }
+
+  function startMistakesReview() {
+    const questions = mistakes
+      .sort((a, b) => b.missedCount - a.missedCount)
+      .slice(0, 15)
+      .map((m) => ({ ...m, accent: "pink" as const }));
+    sessionStorage.setItem("generated-set", JSON.stringify(questions));
     startTest("/test/generated");
   }
 
@@ -232,6 +243,22 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+
+        {mistakes.length > 0 && (
+          <button
+            onClick={startMistakesReview}
+            className="mt-4 flex w-full items-center justify-between rounded-xl border border-pink-200 bg-pink-50/60 p-4 text-left hover:shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <RotateCcw className="text-pink-500" size={20} />
+              <div>
+                <p className="text-sm font-bold text-slate-800">Review Your Mistakes</p>
+                <p className="text-[11px] text-slate-500">{mistakes.length} question(s) you've gotten wrong before</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-pink-600">Start →</span>
+          </button>
+        )}
       </SectionCard>
 
       {/* ============ SECTION: MOCK TESTS ============ */}

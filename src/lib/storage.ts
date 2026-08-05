@@ -1,3 +1,4 @@
+import { Question } from "../types";
 import { NoteEntry } from "../data/notes";
 
 const KEYS = {
@@ -7,6 +8,7 @@ const KEYS = {
   flashcards: "siprep_flashcards",
   adminTests: "siprep_admin_tests",
   notes: "siprep_custom_notes",
+  mistakes: "siprep_mistakes",
 };
 
 // --- Storage Utilities ---
@@ -30,6 +32,41 @@ function set<T>(key: string, value: T): boolean {
     console.error(`[storage] FAILED to save "${key}":`, e);
     return false;
   }
+}
+
+// --- Mistakes ---
+
+export interface MistakeEntry extends Question {
+  subject: string;
+  missedCount: number;
+  lastMissedAt: string;
+}
+
+export function getMistakes(): MistakeEntry[] {
+  return get(KEYS.mistakes, []);
+}
+
+export function recordMistake(question: Question & { subject: string }) {
+  const mistakes = getMistakes();
+  const existing = mistakes.find((m) => m.id === question.id);
+  if (existing) {
+    existing.missedCount++;
+    existing.lastMissedAt = new Date().toISOString();
+  } else {
+    mistakes.push({
+      ...question,
+      missedCount: 1,
+      lastMissedAt: new Date().toISOString(),
+    });
+  }
+  set(KEYS.mistakes, mistakes);
+}
+
+/** Called when a previously-missed question is answered correctly —
+ *  removes it from the review deck since it's no longer a weak spot. */
+export function clearMistake(questionId: string) {
+  const mistakes = getMistakes().filter((m) => m.id !== questionId);
+  set(KEYS.mistakes, mistakes);
 }
 
 // --- Custom Notes ---
