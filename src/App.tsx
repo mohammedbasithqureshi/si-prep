@@ -11,12 +11,14 @@ import Bookmarks from "./components/Bookmarks";
 import { startReminderWatcher } from "./lib/notifications";
 import ProgressPage from "./components/Progress";
 import Syllabus from "./components/Syllabus";
-import Notes from "./components/Notes"
+import Notes from "./components/Notes";
 import Footer from "./components/Footer";
 import PrivacyPolicy from "./components/legal/PrivacyPolicy";
 import TermsOfService from "./components/legal/TermsOfService";
 import Disclaimer from "./components/legal/Disclaimer";
 import Contact from "./components/legal/Contact";
+import CookieConsent from "./components/CookieConsent";
+import Onboarding from "./components/Onboarding";
 
 export default function App() {
   const location = useLocation();
@@ -28,27 +30,29 @@ export default function App() {
 
   return (
     <AppProvider>
-   <div className="min-h-screen bg-sky-50">
-  {!hideNav && <NavHeader />}
-  <div className={!hideNav ? "pb-20 sm:pb-0" : ""}>
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/flashcards" element={<Flashcards />} />
-      <Route path="/bookmarks" element={<Bookmarks />} />
-      <Route path="/progress" element={<ProgressPage />} />
-      <Route path="/admin" element={<AdminPanel />} />
-      <Route path="/test/:testId" element={<TestRunner />} />
-      <Route path="/results" element={<Results />} />
-      <Route path="/syllabus/:subjectId" element={<Syllabus />} />
-      <Route path="/notes/:subjectId" element={<Notes />} /> 
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-<Route path="/terms-of-service" element={<TermsOfService />} />
-<Route path="/disclaimer" element={<Disclaimer />} />
-<Route path="/contact" element={<Contact />} />
-    </Routes>
-  </div>
-  {!hideNav && <Footer />}
-</div>
+      <div className="min-h-screen bg-sky-50">
+        {!hideNav && <NavHeader />}
+        <div className={!hideNav ? "pb-20 sm:pb-0" : ""}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/flashcards" element={<Flashcards />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
+            <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/test/:testId" element={<TestRunner />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="/syllabus/:subjectId" element={<Syllabus />} />
+            <Route path="/notes/:subjectId" element={<Notes />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </div>
+        {!hideNav && <Footer />}
+        <CookieConsent />
+        <Onboarding />
+      </div>
     </AppProvider>
   );
 }
