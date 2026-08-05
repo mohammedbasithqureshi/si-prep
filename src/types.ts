@@ -25,6 +25,7 @@ export interface Subject {
 export interface AdminTest {
   id: string;
   title: string;
+  subjectId: string;
   duration: number;
   questions: Question[];
 }
@@ -54,4 +55,11 @@ export interface CurrentAffairsItem {
   link: string;
   pubDate: string;
   source: string;
+}
+export interface NoteEntry {
+  id: string;
+  subject: string;
+  topic: string;
+  title: string;
+  body: string;
 }

@@ -15,18 +15,22 @@ export default function Syllabus() {
 
   if (!subject) return <p className="p-8 text-center text-slate-400">Subject not found.</p>;
 
+  const customNoteIds = new Set(getCustomNotes().map((n) => n.id));
+  const allNotes = [...NOTES, ...getCustomNotes()];
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>
-      <h1 className="mb-1 text-2xl font-bold text-slate-800" style={{ fontFamily: "Sora" }}>{subject.name}</h1>
+      <h1 className="mb-1 text-2xl font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+        {subject.name}
+      </h1>
       <p className="mb-6 text-sm text-slate-500">Full syllabus with topic weightage — tap a topic for notes</p>
 
       <div className="space-y-3">
         {subject.topics.map((topic) => {
           const isOpen = expanded === topic.name;
-          const allNotes = [...NOTES, ...getCustomNotes()];
           const relatedNotes = allNotes.filter((n) => n.subject === subject.short && n.topic === topic.name);
 
           return (
@@ -39,13 +43,21 @@ export default function Syllabus() {
                   <p className="text-sm font-semibold text-slate-800">{topic.name}</p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
-                      <div className={`h-full rounded-full ${accentBg[subject.accent]}`} style={{ width: `${topic.weight}%` }} />
+                      <div
+                        className={`h-full rounded-full ${accentBg[subject.accent]}`}
+                        style={{ width: `${topic.weight}%` }}
+                      />
                     </div>
                     <span className={`text-xs font-semibold ${accentText[subject.accent]}`}>{topic.weight}% weightage</span>
                   </div>
                 </div>
-                {isOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+                {isOpen ? (
+                  <ChevronUp size={18} className="text-slate-400" />
+                ) : (
+                  <ChevronDown size={18} className="text-slate-400" />
+                )}
               </button>
+
               {isOpen && (
                 <div className="border-t border-slate-100 p-4">
                   {relatedNotes.length > 0 ? (
@@ -54,9 +66,16 @@ export default function Syllabus() {
                         <Link
                           key={note.id}
                           to={`/notes/${subject.id}?topic=${encodeURIComponent(topic.name)}`}
-                          className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                          className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
                         >
-                          <BookOpen size={14} className={accentText[subject.accent]} /> {note.title}
+                          <span className="flex items-center gap-2">
+                            <BookOpen size={14} className={accentText[subject.accent]} /> {note.title}
+                          </span>
+                          {customNoteIds.has(note.id) && (
+                            <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[9px] font-semibold text-pink-600">
+                              Your note
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>

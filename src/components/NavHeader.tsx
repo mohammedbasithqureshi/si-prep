@@ -7,7 +7,7 @@ const tabs = [
   { path: "/flashcards", label: "Cards", icon: Sparkles },
   { path: "/bookmarks", label: "Saved", icon: Star },
   { path: "/progress", label: "Progress", icon: TrendingUp },
-  { path: "/admin", label: "Admin", icon: ShieldCheck },
+  { path: "/admin", label: "My Content", icon: ShieldCheck },
 ];
 
 function Logo({ size = 32 }: { size?: number }) {

@@ -31,10 +31,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-// Reusable wrapper so every section on the dashboard looks visually
-// distinct — its own card, its own heading, its own icon. Add new
-// dashboard sections by wrapping them in this, not by adding more
-// loose <div>s directly under the page.
 function SectionCard({
   title,
   subtitle,
@@ -68,9 +64,6 @@ export default function Dashboard() {
   const adminTests = getAdminTestsLocal();
   const combinedTopicCount = SUBJECTS.reduce((s, sub) => s + sub.topics.length, 0);
 
-  // ------------------------------------------------------------------
-  // PRACTICE VS EXAM MODE
-  // ------------------------------------------------------------------
   const [mode, setMode] = useState<"practice" | "exam">(
     (localStorage.getItem("siprep_test_mode") as "practice" | "exam") || "exam"
   );
@@ -84,9 +77,6 @@ export default function Dashboard() {
     nav(`${path}?mode=${mode}`);
   }
 
-  // ------------------------------------------------------------------
-  // DAILY REMINDER
-  // ------------------------------------------------------------------
   const [reminderTime, setReminderTimeState] = useState(getReminderTime() || "");
 
   async function handleSetReminder(time: string) {
@@ -100,9 +90,6 @@ export default function Dashboard() {
     setReminderTimeState(time);
   }
 
-  // ------------------------------------------------------------------
-  // RULE-BASED PREDICTED QUESTION GENERATOR (Reasoning only)
-  // ------------------------------------------------------------------
   function generateReasoningSet() {
     const reasoningTopics = SUBJECTS.find((s) => s.id === "reasoning")!.topics.map((t) => t.name);
     const fresh = generatePredictedSet(reasoningTopics, 2);
@@ -110,9 +97,6 @@ export default function Dashboard() {
     startTest("/test/generated");
   }
 
-  // ------------------------------------------------------------------
-  // FOCUS AREAS, COUNTDOWN & QUICK DRILL
-  // ------------------------------------------------------------------
   const focusTopics = useMemo(() => getFocusTopics(4), []);
   const daysLeft = useMemo(() => getDaysUntilExam(), []);
   const mistakes = useMemo(() => getMistakes(), []);
@@ -135,7 +119,6 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* ============ TOP BAR: title + reminder + streak ============ */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="text-sm text-slate-400">TS Police SI Recruitment 2026</p>
@@ -171,7 +154,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Practice / Exam mode toggle */}
       <div className="mb-8 flex items-center gap-3">
         <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1">
           <button
@@ -192,7 +174,6 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* ============ SECTION: YOUR INSIGHTS ============ */}
       <SectionCard
         title="Your Insights"
         subtitle="Focus areas, exam countdown, and a quick drill"
@@ -261,7 +242,6 @@ export default function Dashboard() {
         )}
       </SectionCard>
 
-      {/* ============ SECTION: MOCK TESTS ============ */}
       <SectionCard
         title="Mock Tests"
         subtitle="Combined simulation, paper-wise practice, and generated sets"
@@ -299,6 +279,9 @@ export default function Dashboard() {
                 {sub.short}
               </h4>
               <p className="mt-1 text-xs text-slate-400">{sub.questions.length} Qs</p>
+              <span className="mt-1 inline-block w-fit rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                Official Content
+              </span>
               <div className="mt-4">
                 <WeightageBar topics={sub.topics} accent={sub.accent} />
               </div>
@@ -328,7 +311,6 @@ export default function Dashboard() {
         </div>
       </SectionCard>
 
-      {/* ============ SECTION: NOTES & SYLLABUS ============ */}
       <SectionCard
         title="Notes & Syllabus"
         subtitle="Full topic breakdown and study notes, per subject"
@@ -352,30 +334,41 @@ export default function Dashboard() {
         </div>
       </SectionCard>
 
-      {/* ============ SECTION: ADMIN-CREATED TESTS ============ */}
       {adminTests.length > 0 && (
         <SectionCard
           title="My Created Tests"
-          subtitle="Built by you in the Admin panel — not from the internet"
+          subtitle="Auto-created every 25 questions you add — private to this device"
           icon={<ShieldCheck size={18} className="text-pink-500" />}
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {adminTests.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => startTest(`/test/admin:${i}`)}
-                className="flex flex-col rounded-2xl border border-pink-200 bg-pink-50/40 p-5 text-left shadow-sm hover:shadow-md"
-              >
-                <ShieldCheck size={16} className="mb-2 text-pink-500" />
-                <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
-                  {t.title}
-                </h4>
-                <p className="mt-1 text-xs text-slate-400">
-                  {t.questions.length} Qs · {t.duration} min
-                </p>
-              </button>
-            ))}
-          </div>
+          {SUBJECTS.map((sub) => {
+            const testsForSubject = adminTests.filter((t: any) => t.subjectId === sub.id);
+            if (testsForSubject.length === 0) return null;
+            return (
+              <div key={sub.id} className="mb-6 last:mb-0">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{sub.short}</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {testsForSubject.map((t: any) => {
+                    const globalIndex = adminTests.indexOf(t);
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => startTest(`/test/admin:${globalIndex}`)}
+                        className="flex flex-col rounded-2xl border border-pink-200 bg-pink-50/40 p-5 text-left shadow-sm hover:shadow-md"
+                      >
+                        <ShieldCheck size={16} className="mb-2 text-pink-500" />
+                        <h4 className="text-base font-bold text-slate-800" style={{ fontFamily: "Sora" }}>
+                          {t.title}
+                        </h4>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {t.questions.length} Qs · {t.duration} min
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </SectionCard>
       )}
     </div>
